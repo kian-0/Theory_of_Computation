@@ -37,46 +37,16 @@ public class Project1 {
                 boolean isFinal = (i + 1 >= line.length()) || (line.charAt(i + 1) == '\r') || (line.charAt(i + 1) == '\n');
                 char symbol = line.charAt(i);
 
-                //Check if character is already present in the list
-                for (State state : statesList) {
-                    currChar = state.getCurrChar();
-                    prevChar = state.getPrevChar();
-
-                    //If the currChar of the object is the same as the one scanned
-                    //And it is the first Char of the scanned word
-                    //It needs to skip this one and move on but needs to get the ID to transition properly
-                    if (symbol == currChar && i == 0) {
-                        transitionID = state.getID();
-                        duplicateCharCount++;
-                        break;
-                    }
-
-                    //If the currChar of the object is the same as the one scanned
-                    //And the prevChar of the object is the same as the one scanned
-                    //It needs to skip this state and move on but needs the ID to transition properly
-                    if (symbol == currChar && prevChar == line.charAt(i - 1)) {
-                        transitionID = state.getID();
-                        duplicateCharCount++;
-                        break;
-                    }
-
-                }
 
                 //Creates state for current character
                 State state = new State(currentID, i * DIST_SCALE_HOR, currentHeight, false, isFinal, printWriter, line.charAt(i), prevChar);
                 statesList.add(state);
 
                 //Adds transitions
-                if(duplicateCharCount == 0) {
                     Transition transition = new Transition(currentID - 1, currentID, symbol, printWriter);
                     transitionsList.add(transition);
                     currentID++;
-                }else{
-                    Transition transition = new Transition(transitionID, currentID, symbol, printWriter);
-                    transitionsList.add(transition);
-                    duplicateCharCount = 0;
-                    currentID++;
-                }
+
 
                 //Checks for final state
                 if(isFinal){
