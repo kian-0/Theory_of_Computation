@@ -4,18 +4,29 @@
  *  Instructor: Dylan Strickley
  */
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Scanner;
 import java.io.*;
 
 public class Project1 {
     private static final int DIST_SCALE_HOR = 200;
     private static final int DIST_SCALE_VERT = 60;
-    private static ArrayList<State> statesList = new ArrayList<>();
+    private static ArrayList<States> statesList = new ArrayList<>();
     private static ArrayList<Transition> transitionsList = new ArrayList<>();
+    private static ArrayList<String> wordList = new ArrayList<>();
 
     public static void main(String[] args) throws IOException, InterruptedException {
         Scanner scanner = new Scanner(new File("example.txt"));
         PrintWriter printWriter = new PrintWriter(new FileWriter("output.jff"));
+
+        //Puts every line in an ArrayList
+        while (scanner.hasNextLine()) {
+            String line = scanner.nextLine();
+            wordList.add(line);
+        }
+
+        //Sorts wordList
+        Collections.sort(wordList);
 
         //Starter for .jff file
         head(printWriter);
@@ -24,12 +35,11 @@ public class Project1 {
         int transitionID = 1;
         int duplicateCharCount = 0;
         int currentHeight = 0;
+        char prevChar = ' ';
 
         //Loops through whilst there is stuff in the scanner
-        while (scanner.hasNextLine()){
-            String line = scanner.nextLine();
-            char currChar = ' ';
-            char prevChar = ' ';
+        while (!wordList.isEmpty()){
+            String line = wordList.removeFirst();
 
             //Checks each char in scanned line
             for (int i = 0; i < line.length(); i++) {
@@ -37,15 +47,20 @@ public class Project1 {
                 boolean isFinal = (i + 1 >= line.length()) || (line.charAt(i + 1) == '\r') || (line.charAt(i + 1) == '\n');
                 char symbol = line.charAt(i);
 
-
                 //Creates state for current character
-                State state = new State(currentID, i * DIST_SCALE_HOR, currentHeight, false, isFinal, printWriter, line.charAt(i), prevChar);
+                States state = new States(currentID, i * DIST_SCALE_HOR, currentHeight, false, isFinal, printWriter, symbol);
                 statesList.add(state);
 
                 //Adds transitions
-                    Transition transition = new Transition(currentID - 1, currentID, symbol, printWriter);
+                if(i==0) {
+                    Transition transition = new Transition(0, currentID, symbol, prevChar, i, printWriter);
                     transitionsList.add(transition);
                     currentID++;
+                } else{
+                    Transition transition = new Transition(currentID - 1, currentID, symbol, prevChar, i, printWriter);
+                    transitionsList.add(transition);
+                    currentID++;
+                }
 
 
                 //Checks for final state
@@ -58,20 +73,28 @@ public class Project1 {
                     System.out.println("Symbol '"+ symbol +"' is invalid. All characters should be from a-z");
                             System.exit(1); // Exit with code 1
                 }
-
-
+                if(prevChar != line.charAt(i)) {
+                    prevChar = line.charAt(i);
+                    transitionID = i;
+                }
             }
+
             //Moves current height
             currentHeight += DIST_SCALE_VERT;
         }
 
         //Creates first state and set it to the front
-        State p0 = new State(0, -2 * DIST_SCALE_HOR, (currentHeight - DIST_SCALE_VERT) / 2, true, false, printWriter,' ', ' ');
+        States p0 = new States(0, -2 * DIST_SCALE_HOR, (currentHeight - DIST_SCALE_VERT) / 2, true, false, printWriter,' ');
         statesList.addFirst(p0);
-        for(State state : statesList){
+        for(States state : statesList){
             state.start();
             state.join();
         }
+
+        DFA dfa = new DFA(transitionsList, statesList);
+        dfa.start();
+        dfa.join();
+
 
         for(Transition transition : transitionsList){
             transition.start();
@@ -104,7 +127,7 @@ public class Project1 {
 }
 
 
-class State extends Thread {
+class States extends Thread {
     private int id;
     private int x;
     private int y;
@@ -115,14 +138,14 @@ class State extends Thread {
     private PrintWriter printWriter;
     private char[] characterList;
 
-    public State(int id, int x, int y, boolean isInitial, boolean isFinal, PrintWriter printWriter, char currChar, char prevChar){
+    public States(int id, int x, int y, boolean isInitial, boolean isFinal, PrintWriter printWriter, char currChar){
         this.id = id;
         this.x = x;
         this.y = y;
         this.isInitial = isInitial;
         this.isFinal = isFinal;
         this.printWriter = printWriter;
-        this.prevChar = prevChar;
+        this.currChar = currChar;
 
     }
 
@@ -163,19 +186,46 @@ class State extends Thread {
 
 }
 
-
 class Transition extends Thread{
     private int origin;
     private int dest;
     private char symbol;
+    private char prevChar;
+    private int pos;
     private PrintWriter printWriter;
 
-    public Transition(int origin, int dest, char symbol, PrintWriter printWriter){
+    public Transition(int origin, int dest, char symbol, char prevChar, int pos, PrintWriter printWriter){
         this.origin = origin;
         this.dest = dest;
         this.symbol = symbol;
+        this.prevChar = prevChar;
+        this.pos = pos;
         this.printWriter = printWriter;
 
+    }
+
+    public int getDest() {
+        return dest;
+    }
+
+    public int getOrigin() {
+        return origin;
+    }
+
+    public char getSymbol() {
+        return symbol;
+    }
+
+    public char getPrevChar() {
+        return prevChar;
+    }
+
+    public void setDest(int dest) {
+        this.dest = dest;
+    }
+
+    public void setOrigin(int origin) {
+        this.origin = origin;
     }
 
     @Override
@@ -190,5 +240,40 @@ class Transition extends Thread{
         printWriter.println("<to>"+ dest +"</to>");
         printWriter.println("<read>"+ symbol +"</read>");
         printWriter.println("</transition>");
+    }
+}
+
+class DFA extends Thread{
+    private static ArrayList<Transition> transitions;
+    private static ArrayList<States> states;
+
+    public DFA(ArrayList<Transition> transitions, ArrayList<States> states){
+        this.transitions = transitions;
+        this.states = states;
+
+    }
+
+    @Override
+    public void run() {
+        for(int i = 0; i < transitions.size(); i++){
+            Transition tI = transitions.get(i);
+            for(int j = 1; j < transitions.size(); j++){
+                Transition tJ = transitions.get(j);
+                if(tI.getOrigin() == tJ.getOrigin() && tI.getDest() != tJ.getDest() && tI.getSymbol() == tJ.getSymbol()){
+                    tJ.setDest(tI.getDest());
+                }
+            }
+        }
+
+        for(int i = 0; i < states.size(); i++){
+            States sI = states.get(i);
+            for(int j = 1; j < states.size(); j++){
+                States sJ = states.get(j);
+                if(sI.getCurrChar() == sJ.getCurrChar() && sI.getID() != sJ.getID()){
+
+                }
+            }
+        }
+
     }
 }

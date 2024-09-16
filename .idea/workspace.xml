@@ -21,18 +21,18 @@
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
-  "lastFilter": {
-    "state": "OPEN",
-    "assignee": "kian-0"
-  }
-}]]></component>
-  <component name="GithubPullRequestsUISettings">{
-  &quot;selectedUrlAndAccountId&quot;: {
-    &quot;url&quot;: &quot;https://github.com/kian-0/Theory_of_Computation.git&quot;,
-    &quot;accountId&quot;: &quot;8f9d4fa7-45d4-4811-ab48-1e514b4095a4&quot;
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;kian-0&quot;
   }
 }</component>
+  <component name="GithubPullRequestsUISettings"><![CDATA[{
+  "selectedUrlAndAccountId": {
+    "url": "https://github.com/kian-0/Theory_of_Computation",
+    "accountId": "b450eb5f-2f62-4a71-8028-a03dfc57aea9"
+  }
+}]]></component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 1
 }</component>
@@ -46,7 +46,7 @@
   "keyToString": {
     "Application.Project1.executor": "Run",
     "RunOnceActivity.ShowReadmeOnStart": "true",
-    "git-widget-placeholder": "915",
+    "git-widget-placeholder": "master",
     "kotlin-language-version-configured": "true",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
@@ -74,6 +74,7 @@
       <updated>1726369331422</updated>
       <workItem from="1726369332522" duration="7435000" />
       <workItem from="1726442576629" duration="17558000" />
+      <workItem from="1726492368585" duration="4809000" />
     </task>
     <servers />
   </component>
