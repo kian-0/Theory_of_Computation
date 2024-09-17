@@ -28,6 +28,7 @@ public class Project1 {
         //Sorts wordList
         Collections.sort(wordList);
 
+
         //Starter for .jff file
         head(printWriter);
 
@@ -35,7 +36,27 @@ public class Project1 {
         int transitionID = 1;
         int duplicateCharCount = 0;
         int currentHeight = 0;
+        int charPos = 0;
         char prevChar = ' ';
+        char[] previousChars = new char[wordList.size()];
+
+        //Attempting to make a list of chars and then make all the states afterwards
+        for(int i = 0; i < wordList.size(); i++) {
+            String word = wordList.get(i);
+            char[] chars = word.toCharArray();
+
+
+            for(int j = 0; j < chars.length; j++) {
+                if(previousChars[j] == chars[j]){
+
+                }
+
+
+
+            }
+
+            previousChars = word.toCharArray();
+        }
 
         //Loops through whilst there is stuff in the scanner
         while (!wordList.isEmpty()){
@@ -126,6 +147,9 @@ public class Project1 {
 
 }
 
+class CharOrg{
+
+}
 
 class States extends Thread {
     private int id;
