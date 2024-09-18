@@ -45,7 +45,6 @@ public class Project1 {
             String word = wordList.get(i);
             char[] chars = word.toCharArray();
 
-
             for(int j = 0; j < chars.length; j++) {
                 if(previousChars[j] == chars[j]){
 
