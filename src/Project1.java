@@ -22,19 +22,49 @@ public class Project1 {
         ArrayList<String> wordList = new ArrayList<>();
 
         //Input/Output
-        Scanner scanner = new Scanner(new File("example.txt"));
+        System.out.println("Inputting a file? y/n");
+        Scanner userIn = new Scanner(System.in);
+
         PrintWriter printWriter = new PrintWriter(new FileWriter("output.jff"));
 
-        //Puts every line in an ArrayList
-        while (scanner.hasNextLine()) {
-            String line = scanner.nextLine();
-            wordList.add(line);
 
+        //Asks if using file input
+        //If yes top block
+        if (userIn.nextLine().equalsIgnoreCase("y")) { //If we are inputting a file
+            System.out.println("Enter file name: ie 'example.txt'");
+            Scanner scanner = new Scanner(new File(userIn.nextLine()));
+
+            //Puts every line in an ArrayList
+            while (scanner.hasNextLine()) {
+                String line = scanner.nextLine();
+                wordList.add(line);
+
+            }
+
+            scanner.close();
+        }else{//If we are not inputting a file
+            System.out.println("Enter each entry with new line");
+            System.out.println("Enter 'END' to finish entry");
+
+            //Puts every line in an ArrayList other than END
+            while (userIn.hasNextLine()) {
+                String line = userIn.nextLine();
+
+                //Stops the loop
+                if(line.equals("END")){
+                    break;
+                }
+
+                wordList.add(line);
+
+            }
         }
+
+
         //Sorts wordList
         Collections.sort(wordList);
 
-        for(String word : wordList) {
+        for (String word : wordList) {
             System.out.println(word);
         }
 
@@ -55,15 +85,15 @@ public class Project1 {
 
                 //Checks for any non-lower case characters
                 //Taken from example
-                if(!Character.isLowerCase(symbol)){
+                if (!Character.isLowerCase(symbol)) {
                     System.out.printf("Symbol '%c' is invalid. All characters should be from a-z%n", symbol);
-                            System.exit(1); // Exit with code 1
+                    System.exit(1); // Exit with code 1
                 }
 
                 //Checks if a transition from currentState with the input symbol already exists
                 for (Transition t : transitionsList) {
                     if ((t.getOrigin() == origin) && (t.getSymbol() == symbol)) {
-                        dest = t.getDest() ;
+                        dest = t.getDest();
                         break;
                     }
                 }
@@ -71,8 +101,8 @@ public class Project1 {
                 //If the transition does not exist, create a new state and add a transition
                 if (dest == 0) {
                     dest = stateCounter;
-                    statesList.add(new States(dest, i * DIST_SCALE_HOR, currentHeight ,printWriter));
-                    transitionsList.add(new Transition(origin, dest, symbol,printWriter));
+                    statesList.add(new States(dest, i * DIST_SCALE_HOR, currentHeight, printWriter));
+                    transitionsList.add(new Transition(origin, dest, symbol, printWriter));
                     stateCounter++;
                 }
 
@@ -91,7 +121,7 @@ public class Project1 {
             }
             currentHeight += 75;//Moves height down after each word
         }
-        
+
 
         //Creates first state and set it to the front
         States p0 = new States(0, -2 * DIST_SCALE_HOR, (currentHeight - DIST_SCALE_VERT) / 3, printWriter);
@@ -113,8 +143,9 @@ public class Project1 {
         //Ends JFLAP file and closes all Input/Output
         tail(printWriter);
         printWriter.close();
-        scanner.close();
-
+        userIn.close();
+        System.out.println();
+        System.out.println("Output file: output.jff");
     }
 
     /**
@@ -152,11 +183,11 @@ class States extends Thread {
         isFinal = 0;
     }
 
-    public int getID(){
+    public int getID() {
         return id;
     }
 
-    public void setIsFinal(int isFinal){
+    public void setIsFinal(int isFinal) {
         this.isFinal = isFinal;
     }
 
@@ -170,14 +201,14 @@ class States extends Thread {
         printWriter.println("<state id=\"" + id + "\" name=\"q" + id + "\">");
         printWriter.println("<x>" + x + "</x>");
         printWriter.println("<y>" + y + "</y>");
-        switch (isFinal){
-            case (1) :
-            System.out.println("<initial/>");
-            printWriter.println("<initial/>");
+        switch (isFinal) {
+            case (1):
+                System.out.println("<initial/>");
+                printWriter.println("<initial/>");
                 break;
-            case (2) :
-            System.out.println("<final/>");
-            printWriter.println("<final/>");
+            case (2):
+                System.out.println("<final/>");
+                printWriter.println("<final/>");
                 break;
             default:
                 break;
