@@ -25,7 +25,7 @@ public class Project1 {
         ArrayList<Integer> destinList = new ArrayList<>();
         ArrayList<Integer> isFinal = new ArrayList<>();
         ArrayList<Character> charTemp = new ArrayList<>();
-        ArrayList<Integer> temp = new ArrayList<>();
+        ArrayList<Integer> currID = new ArrayList<>();
 
         //Input/Output
         Scanner scanner = new Scanner(new File("example.txt"));
@@ -48,6 +48,8 @@ public class Project1 {
         int currentHeight = 0;
         int currentWidth = 0;
         char[] previousChars = {' '};
+        boolean branching = false;
+        int branches =0;
 
         //Attempting to make a list of chars and then make all the states afterward
         for (String word : wordList) {
@@ -61,6 +63,7 @@ public class Project1 {
                 //neither == 2
                 //3 used for initial p0
                 if (j == chars.length - 1) {
+
                     isFinal.add(0);
                 } else if (j == 0) {
                     isFinal.add(1);
@@ -77,8 +80,9 @@ public class Project1 {
                         //If it did it would add the original and destin
                         if (previousChars[j] == chars[j]) {
                             charList.add(chars[j]);
-                            originList.add(originList.get(charList.size() - previousChars.length - 1));
+                            originList.add(originList.get(charList.size() - previousChars.length - j - 1));
                             destinList.add(currentID);
+                            branching = true;
 
                             //Checks to see if it is a new sequence
                             //By checking to see if it is a different starting letter
@@ -91,7 +95,7 @@ public class Project1 {
                             //defaults adds any normal states
                         } else {
                             charList.add(chars[j]);
-                            originList.add(currentID);
+                            originList.add(currentID-1);
                             destinList.add(currentID);
                             currentID++;
                         }
@@ -99,7 +103,7 @@ public class Project1 {
                         //Adds any normal states
                 } else {
                     charList.add(chars[j]);
-                    originList.add(currentID);
+                    originList.add(currentID-1);
                     destinList.add(currentID);
                     currentID++;
 
@@ -143,6 +147,7 @@ public class Project1 {
         }
         System.out.println(isFinal.size());
 
+        boolean start = true;
         currentID = 1;
 
         //Loops through charList array whilst stuff in array
@@ -154,7 +159,8 @@ public class Project1 {
 
             //When currentId equals the state it will create a new state
             //Otherwise it should only create a transition
-            if (origin > 0) {
+            if (origin > 0 || start) {
+                start = false;
                 States state = new States(currentID, currentWidth, currentHeight, isFin, printWriter, c);
                 statesList.add(state);
                 currentID++;
@@ -162,20 +168,20 @@ public class Project1 {
 
             switch (isFin) {
                 case (0): //When final
-                    //Transition transition = new Transition(origin, dest-1, c, c, origin, printWriter);
-                    //transitionsList.add(transition);
+                    Transition transition = new Transition(origin, dest, c, printWriter);
+                    transitionsList.add(transition);
                     currentHeight += DIST_SCALE_VERT;
                     currentWidth = 0;
                     break;
 
-                /*case (1): //When Initial it will branch off centre
-                    Transition transition = new Transition(origin, dest, c, printWriter);
+                case (1): //When Initial it will branch off centre
+                    transition = new Transition(origin, dest, c, printWriter);
                     transitionsList.add(transition);
                     currentWidth += DIST_SCALE_HOR;
                     break;
-                */
+
                 case (2): //When in middle
-                    Transition transition = new Transition(origin, dest, c, printWriter);
+                    transition = new Transition(origin, dest, c, printWriter);
                     transitionsList.add(transition);
                     currentWidth += DIST_SCALE_HOR;
                     break;
