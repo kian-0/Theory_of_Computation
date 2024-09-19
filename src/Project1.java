@@ -1,83 +1,116 @@
-/** Author: Kian Aliwalas
- *  Project 1 DFA Construction
- *  Fall 2024 Theory of Computation
- *  Instructor: Dylan Strickley
+/**
+ * Author: Kian Aliwalas
+ * Project 1 DFA Construction
+ * Fall 2024 Theory of Computation
+ * Instructor: Dylan Strickley
  */
+
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Scanner;
 import java.io.*;
 
 public class Project1 {
     private static final int DIST_SCALE_HOR = 200;
     private static final int DIST_SCALE_VERT = 60;
-    private static ArrayList<State> statesList = new ArrayList<>();
-    private static ArrayList<Transition> transitionsList = new ArrayList<>();
+
 
     public static void main(String[] args) throws IOException, InterruptedException {
+        //Variables
+        ArrayList<States> statesList = new ArrayList<>();
+        ArrayList<Transition> transitionsList = new ArrayList<>();
+        ArrayList<String> wordList = new ArrayList<>();
+
+        //Input/Output
         Scanner scanner = new Scanner(new File("example.txt"));
         PrintWriter printWriter = new PrintWriter(new FileWriter("output.jff"));
+
+        //Puts every line in an ArrayList
+        while (scanner.hasNextLine()) {
+            String line = scanner.nextLine();
+            wordList.add(line);
+
+        }
+        //Sorts wordList
+        Collections.sort(wordList);
+
+        for(String word : wordList) {
+            System.out.println(word);
+        }
 
         //Starter for .jff file
         head(printWriter);
 
-        int currentID = 1;
-        int transitionID = 1;
-        int duplicateCharCount = 0;
         int currentHeight = 0;
 
-        //Loops through whilst there is stuff in the scanner
-        while (scanner.hasNextLine()){
-            String line = scanner.nextLine();
-            char currChar = ' ';
-            char prevChar = ' ';
+        int stateCounter = 1;
 
-            //Checks each char in scanned line
-            for (int i = 0; i < line.length(); i++) {
-                // Check if the current character is the end of the string
-                boolean isFinal = (i + 1 >= line.length()) || (line.charAt(i + 1) == '\r') || (line.charAt(i + 1) == '\n');
-                char symbol = line.charAt(i);
+        //Goes over each word in wordList
+        for (String word : wordList) {
+            int origin = 0; //Track working state
 
+            for (int i = 0; i < word.length(); i++) {
+                char symbol = word.charAt(i);
+                int dest = 0; //Tracks destination state
 
-                //Creates state for current character
-                State state = new State(currentID, i * DIST_SCALE_HOR, currentHeight, false, isFinal, printWriter, line.charAt(i), prevChar);
-                statesList.add(state);
-
-                //Adds transitions
-                    Transition transition = new Transition(currentID - 1, currentID, symbol, printWriter);
-                    transitionsList.add(transition);
-                    currentID++;
-
-
-                //Checks for final state
-                if(isFinal){
-                    break;
-                }
-
-                //Checks for invalid chars taken from example
-                if (!Character.isLowerCase(symbol)) {
-                    System.out.println("Symbol '"+ symbol +"' is invalid. All characters should be from a-z");
+                //Checks for any non-lower case characters
+                //Taken from example
+                if(!Character.isLowerCase(symbol)){
+                    System.out.printf("Symbol '%c' is invalid. All characters should be from a-z%n", symbol);
                             System.exit(1); // Exit with code 1
                 }
 
+                //Checks if a transition from currentState with the input symbol already exists
+                for (Transition t : transitionsList) {
+                    if ((t.getOrigin() == origin) && (t.getSymbol() == symbol)) {
+                        dest = t.getDest() ;
+                        break;
+                    }
+                }
 
+                //If the transition does not exist, create a new state and add a transition
+                if (dest == 0) {
+                    dest = stateCounter;
+                    statesList.add(new States(dest, i * DIST_SCALE_HOR, currentHeight ,printWriter));
+                    transitionsList.add(new Transition(origin, dest, symbol,printWriter));
+                    stateCounter++;
+                }
+
+                origin = dest;  //Moves to the next state
             }
-            //Moves current height
-            currentHeight += DIST_SCALE_VERT;
+
+            //Sets if the state is final
+            // 0/null = default
+            // 1 = initial
+            // 2 = final
+            for (States s : statesList) {
+                if (s.getID() == (origin)) {
+                    s.setIsFinal(2);
+                    break;
+                }
+            }
+            currentHeight += 75;//Moves height down after each word
         }
+        
 
         //Creates first state and set it to the front
-        State p0 = new State(0, -2 * DIST_SCALE_HOR, (currentHeight - DIST_SCALE_VERT) / 2, true, false, printWriter,' ', ' ');
+        States p0 = new States(0, -2 * DIST_SCALE_HOR, (currentHeight - DIST_SCALE_VERT) / 3, printWriter);
+        p0.setIsFinal(1);
         statesList.addFirst(p0);
-        for(State state : statesList){
+
+        //Starts and waits for all the stored State object/threads
+        for (States state : statesList) {
             state.start();
             state.join();
         }
 
-        for(Transition transition : transitionsList){
+        //Starts and waits for all the stored Transition object/threads
+        for (Transition transition : transitionsList) {
             transition.start();
             transition.join();
         }
 
+        //Ends JFLAP file and closes all Input/Output
         tail(printWriter);
         printWriter.close();
         scanner.close();
@@ -94,6 +127,7 @@ public class Project1 {
 
     /**
      * End for .jff file taken from example
+     *
      * @param printWriter output
      */
     private static void tail(PrintWriter printWriter) {
@@ -103,31 +137,31 @@ public class Project1 {
 
 }
 
+class States extends Thread {
+    private final int id;
+    private final int x;
+    private final int y;
+    private int isFinal;
+    private final PrintWriter printWriter;
 
-class State extends Thread {
-    private int id;
-    private int x;
-    private int y;
-    private char currChar;
-    private char prevChar;
-    private boolean isInitial;
-    private boolean isFinal;
-    private PrintWriter printWriter;
-    private char[] characterList;
-
-    public State(int id, int x, int y, boolean isInitial, boolean isFinal, PrintWriter printWriter, char currChar, char prevChar){
+    public States(int id, int x, int y, PrintWriter printWriter) {
         this.id = id;
         this.x = x;
         this.y = y;
-        this.isInitial = isInitial;
-        this.isFinal = isFinal;
         this.printWriter = printWriter;
-        this.prevChar = prevChar;
+        isFinal = 0;
+    }
 
+    public int getID(){
+        return id;
+    }
+
+    public void setIsFinal(int isFinal){
+        this.isFinal = isFinal;
     }
 
     @Override
-    public void run(){
+    public void run() {
         //Prints out to terminal
         System.out.println("<state id=\"" + id + "\" name=\"q" + id + "\">");
         System.out.println("<x>" + x + "</x>");
@@ -136,41 +170,32 @@ class State extends Thread {
         printWriter.println("<state id=\"" + id + "\" name=\"q" + id + "\">");
         printWriter.println("<x>" + x + "</x>");
         printWriter.println("<y>" + y + "</y>");
-        if (isInitial) {
+        switch (isFinal){
+            case (1) :
             System.out.println("<initial/>");
             printWriter.println("<initial/>");
-        }
-        if (isFinal) {
+                break;
+            case (2) :
             System.out.println("<final/>");
             printWriter.println("<final/>");
+                break;
+            default:
+                break;
         }
 
         System.out.println("</state>");
         printWriter.println("</state>");
     }
 
-    public char getCurrChar() {
-        return currChar;
-    }
-
-    public char getPrevChar() {
-        return prevChar;
-    }
-
-    public int getID(){
-        return id;
-    }
-
 }
 
+class Transition extends Thread {
+    private final int origin;
+    private final int dest;
+    private final char symbol;
+    private final PrintWriter printWriter;
 
-class Transition extends Thread{
-    private int origin;
-    private int dest;
-    private char symbol;
-    private PrintWriter printWriter;
-
-    public Transition(int origin, int dest, char symbol, PrintWriter printWriter){
+    public Transition(int origin, int dest, char symbol, PrintWriter printWriter) {
         this.origin = origin;
         this.dest = dest;
         this.symbol = symbol;
@@ -178,17 +203,29 @@ class Transition extends Thread{
 
     }
 
+    public int getDest() {
+        return dest;
+    }
+
+    public int getOrigin() {
+        return origin;
+    }
+
+    public char getSymbol() {
+        return symbol;
+    }
+
     @Override
-    public void run(){
+    public void run() {
         System.out.println("<transition>");
-        System.out.println("<from>"+ origin+"</from>");
-        System.out.println("<to>"+ dest +"</to>");
-        System.out.println("<read>"+ symbol +"</read>");
+        System.out.println("<from>" + origin + "</from>");
+        System.out.println("<to>" + dest + "</to>");
+        System.out.println("<read>" + symbol + "</read>");
         System.out.println("</transition>");
         printWriter.println("<transition>");
-        printWriter.println("<from>"+ origin+"</from>");
-        printWriter.println("<to>"+ dest +"</to>");
-        printWriter.println("<read>"+ symbol +"</read>");
+        printWriter.println("<from>" + origin + "</from>");
+        printWriter.println("<to>" + dest + "</to>");
+        printWriter.println("<read>" + symbol + "</read>");
         printWriter.println("</transition>");
     }
 }
